@@ -4,6 +4,12 @@ A local React dashboard for the public, read-only Community API exposed by
 AgeLANServer. It recreates the medieval-themed community pages using data from
 the server you configure; it does not host a server or modify AgeLANServer.
 
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for
+the development and pull request guidelines. Use the repository's Issues tab
+to report a bug or propose a change.
+
 ## Requirements
 
 - Node.js 22.12+ (required by the current Vite release)
@@ -13,18 +19,17 @@ the server you configure; it does not host a server or modify AgeLANServer.
 ## Configure and run
 
 1. Copy `.env.example` to `.env`.
-2. Set `AGE_SERVER_URL` to the server's web address, for example:
+2. Set `VITE_AGE_SERVER_URL` to the server's web address, for example:
 
    ```dotenv
-   AGE_SERVER_URL=https://127.0.0.1:443
+   VITE_AGE_SERVER_URL=https://127.0.0.1:443
    ```
 
-3. If the server uses its own certificate, configure trust using either:
-   - `AGE_SERVER_CA_FILE=./certs/ageserver-ca.pem` for the PEM certificate or
-     CA file; this is recommended.
-   - `AGE_SERVER_TLS_INSECURE=true` only on a trusted LAN when certificate
-     validation cannot be configured. This disables TLS certificate
-     verification for the development proxy.
+3. If the server uses a self-signed certificate, install and trust its
+   certificate (or its root CA) in Windows and restart the browser. The
+   certificate must be valid for the host/IP in `VITE_AGE_SERVER_URL`.
+   Browsers do not let website JavaScript disable TLS certificate validation;
+   this app never ignores certificate errors.
 
 4. Install dependencies and start the local web app:
 
@@ -34,13 +39,19 @@ the server you configure; it does not host a server or modify AgeLANServer.
    ```
 
    Open the localhost URL printed by Vite. The development server binds only to
-   `127.0.0.1`. Vite proxies `/community/*` to `AGE_SERVER_URL`, avoiding
-   browser CORS restrictions without changing the game server.
+   `127.0.0.1`. The browser sends each `/community/*` request directly to
+   `VITE_AGE_SERVER_URL`; Vite does not proxy or relay API traffic.
+
+   Because this is a cross-origin browser request, AgeLANServer must return
+   suitable CORS headers allowing the Vite origin (for example
+   `http://127.0.0.1:5173`). If the browser reports a CORS error, the server
+   must be configured to allow that origin; a browser-side app cannot work
+   around CORS while sending requests directly.
 
 For a production build, run `npm run build`. `npm run preview` serves that
-build locally and uses the same Community API proxy configuration. A static
-host needs a same-origin reverse proxy for `/community/*`; browser requests
-cannot use the local Vite proxy after deployment.
+build locally. The `VITE_AGE_SERVER_URL` value is embedded into the frontend at
+build time. Any site origin used in production must also be allowed by the
+server's CORS policy.
 
 ## Available pages
 
@@ -53,7 +64,9 @@ cannot use the local Vite proxy after deployment.
 - **Players:** profile search by numeric ID or exact alias, plus a ranked
   profile listing.
 - **Match history:** recent reported matches for a profile ID, with player
-  results and before/after ratings.
+  results and before/after ratings, plus map thumbnails and civilization icons.
+- **Lobby details:** map artwork and civilization icons alongside the public
+  player and room details.
 - **News:** configured server news.
 - **Resources:** available achievement definitions and awards, community
   events, clan search/details, inventory, and avatar statistics.
@@ -102,9 +115,10 @@ npm run build
 ```
 
 The `.env` file is ignored by Git. Never commit private keys, certificates
-containing private keys, or server credentials.
+containing private keys, or server credentials. Only the server URL is needed
+in the frontend environment; it is public to anyone who can load the website.
 
 ## License
 
-This repository does not currently include an open-source license. All rights
-are reserved by the copyright holder.
+This project is licensed under the GNU General Public License v3.0. See
+[LICENSE](./LICENSE) for the full license text.

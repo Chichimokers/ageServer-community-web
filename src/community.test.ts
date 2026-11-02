@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
+  civilizationIconPath,
   findAdvertisements,
   getAvatarStats,
   getInventory,
@@ -7,6 +8,7 @@ import {
   getNews,
   getPersonalStats,
   getRecentMatchHistory,
+  mapIconPath,
   parseLeaderboardDefinitions,
   parseRawRows,
 } from "./community"
@@ -90,6 +92,7 @@ describe("Community API decoders", () => {
       }],
     }])
     const requestedUrl = new URL(vi.mocked(fetch).mock.calls[0][0] as string, "http://localhost")
+    expect(requestedUrl.origin).toBe("https://127.0.0.1")
     expect(requestedUrl.pathname).toBe("/community/leaderboard/getRecentMatchHistory")
     expect(requestedUrl.searchParams.get("profile_ids")).toBe("[42]")
   })
@@ -127,6 +130,16 @@ describe("Community API decoders", () => {
     expect(parseRawRows(definitions)).toEqual([[1, "FIRST_WIN"]])
   })
 
+  it("resolves legacy map and civilization artwork with safe fallbacks", () => {
+    expect(mapIconPath("Arabia")).toBe("/images/maps/arabia.png")
+    expect(mapIconPath("BlackForest.rms")).toBe("/images/maps/black-forest.png")
+    expect(mapIconPath("GoldenPit")).toBe("/images/maps/golden-pit.png")
+    expect(mapIconPath("Unbundled Map")).toBe("/images/map-placeholder.svg")
+    expect(civilizationIconPath(0)).toBe("/images/civs/aztecs.png")
+    expect(civilizationIconPath(39)).toBe("/images/civs/bengalis.png")
+    expect(civilizationIconPath(-1)).toBe("/images/civs/unknown.svg")
+  })
+
   it("requests and decodes profiles, news, avatar stats, and inventory", async () => {
     const leaderboard = [
       0,
@@ -160,6 +173,7 @@ describe("Community API decoders", () => {
 
     const requestedUrls = vi.mocked(fetch).mock.calls.map(([url]) => new URL(url as string, "http://localhost"))
     expect(requestedUrls[0].searchParams.get("aliases")).toBe("[\"Knight\"]")
+    expect(requestedUrls.every((url) => url.origin === "https://127.0.0.1")).toBe(true)
     expect(requestedUrls.map((url) => url.pathname)).toEqual([
       "/community/leaderboard/GetPersonalStat",
       "/community/news/getNews",

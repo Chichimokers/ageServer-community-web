@@ -61,7 +61,7 @@ function Shell() {
             </NavLink>
           ))}
         </nav>
-        <div className="api-indicator"><i /> Local API proxy</div>
+        <div className="api-indicator"><i /> Direct API connection</div>
       </header>
 
       <main className="container">
@@ -70,7 +70,7 @@ function Shell() {
             <p className="eyebrow">AGE SERVER · COMMUNITY REALM</p>
             <h1>{title}</h1>
           </div>
-          <span className="live-state"><i /> Community API · Local</span>
+          <span className="live-state"><i /> Browser → Community API</span>
         </div>
         <Outlet />
       </main>

@@ -318,6 +318,22 @@
   text-align: center;
 }
 
+.map-artwork {
+  display: block;
+  width: 116px;
+  height: 72px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(198, 169, 112, 0.3);
+  border-radius: 3px;
+  background: #252921;
+  object-fit: cover;
+}
+
+.lobby-map-artwork {
+  width: 54px;
+  height: 42px;
+}
+
 .lobby-main {
   display: flex;
   flex-direction: column;
@@ -571,6 +587,50 @@ tbody tr:hover {
   font: 600 17px/1.2 Georgia, "Times New Roman", serif;
 }
 
+.match-map-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.civilization-artwork {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(198, 169, 112, 0.34);
+  border-radius: 50%;
+  background: #252921;
+  object-fit: cover;
+}
+
+.match-player-info {
+  display: flex;
+  flex: 1;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.match-player-info > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.civilization-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.civilization-cell .civilization-artwork {
+  width: 27px;
+  height: 27px;
+}
+
 .match-meta {
   justify-content: flex-start;
   margin: 10px 0;
@@ -749,6 +809,28 @@ input:focus {
   margin: 23px 0 10px;
   color: #d9ceb0;
   font: 600 16px Georgia, "Times New Roman", serif;
+}
+
+.lobby-map-feature {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid rgba(198, 169, 112, 0.16);
+  border-radius: 3px;
+  background: rgba(20, 27, 31, 0.6);
+}
+
+.lobby-map-feature .map-artwork {
+  width: 144px;
+  height: 88px;
+}
+
+.lobby-map-feature h3 {
+  margin-top: 5px;
+  color: #dfd4b8;
+  font: 600 18px/1.2 Georgia, "Times New Roman", serif;
 }
 
 .privacy-note {
@@ -938,11 +1020,30 @@ input:focus {
   }
 
   .lobby-row {
-    grid-template-columns: 23px minmax(0, 1fr) auto;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
   }
 
-  .lobby-ip {
+  .lobby-row .lobby-ip {
     display: none;
+  }
+
+  .lobby-map-artwork {
+    width: 44px;
+    height: 38px;
+  }
+
+  .match-map-heading {
+    gap: 10px;
+  }
+
+  .match-map-heading .map-artwork {
+    width: 84px;
+    height: 60px;
+  }
+
+  .lobby-map-feature .map-artwork {
+    width: 104px;
+    height: 72px;
   }
 
   .detail-grid {

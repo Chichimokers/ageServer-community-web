@@ -1,6 +1,7 @@
 import { useCallback, useState, type FormEvent, type ReactNode } from "react"
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import {
+  civilizationIconPath,
   civilizationName,
   displayMapName,
   findAdvertisements,
@@ -18,6 +19,7 @@ import {
   getPersonalStats,
   getRecentMatchHistory,
   leaderboardName,
+  mapIconPath,
   parseLeaderboardDefinitions,
   parseRawRows,
   type LeaderboardEntry,
@@ -94,18 +96,54 @@ function ProfileName({ profileId, profiles }: { profileId: number; profiles: Pro
   return <ProfileAnchor profile={{ id: profileId }}>{name}</ProfileAnchor>
 }
 
+function MapArtwork({ name, className = "" }: { name: string; className?: string }) {
+  return (
+    <img
+      className={`map-artwork ${className}`.trim()}
+      src={mapIconPath(name)}
+      alt={`${displayMapName(name)} map`}
+      onError={(event) => {
+        event.currentTarget.onerror = null
+        event.currentTarget.src = "/images/map-placeholder.svg"
+      }}
+    />
+  )
+}
+
+function CivilizationArtwork({ raceId }: { raceId: number }) {
+  const name = civilizationName(raceId)
+  return (
+    <img
+      className="civilization-artwork"
+      src={civilizationIconPath(raceId)}
+      alt=""
+      title={name}
+      onError={(event) => {
+        event.currentTarget.onerror = null
+        event.currentTarget.src = "/images/civs/unknown.svg"
+      }}
+    />
+  )
+}
+
 function MatchCard({ match, profiles }: { match: MatchRecord; profiles: Profile[] }) {
   return (
     <article className="match-card">
       <div className="match-heading">
-        <div><p className="eyebrow">MATCH #{match.id}</p><h3>{displayMapName(match.mapName)}</h3></div>
+        <div className="match-map-heading">
+          <MapArtwork name={match.mapName} />
+          <div><p className="eyebrow">MATCH #{match.id}</p><h3>{displayMapName(match.mapName)}</h3></div>
+        </div>
         <span className="badge">{match.matchTypeId === 26 ? "Ranked automatch" : "Recorded match"}</span>
       </div>
       <div className="match-meta"><span>{timestamp(match.finishedAt)}</span><span>{match.startedAt && match.finishedAt ? `${Math.max(0, Math.round((match.finishedAt - match.startedAt) / 60))} min` : "Duration unavailable"}</span></div>
       <div className="match-players">
         {match.players.map((player) => (
           <div className="match-player" key={`${match.id}-${player.profileId}`}>
-            <div><strong><ProfileName profileId={player.profileId} profiles={profiles} /></strong><small>{civilizationName(player.raceId)} · team {player.teamId || "—"}</small></div>
+            <div className="match-player-info">
+              <CivilizationArtwork raceId={player.raceId} />
+              <span><strong><ProfileName profileId={player.profileId} profiles={profiles} /></strong><small>{civilizationName(player.raceId)} · team {player.teamId || "—"}</small></span>
+            </div>
             <span className={`result-pill ${player.result === 1 ? "win" : "loss"}`}>{player.result === 1 ? "Victory" : "Defeat"}</span>
             {match.matchTypeId === 26 && <span className="rating-change">{player.oldRating} → {player.newRating}</span>}
           </div>
@@ -196,7 +234,7 @@ function LobbyList({ lobbies, profiles }: { lobbies: Lobby[]; profiles: Profile[
         const hostPeer = lobby.peers.find((peer) => peer.profileId === lobby.hostProfileId)
         return (
           <Link className="lobby-row" to={`/lobbies/${lobby.id}`} key={lobby.id}>
-            <span className="lobby-mark">⚔</span>
+            <MapArtwork name={lobby.mapName} className="lobby-map-artwork" />
             <span className="lobby-main"><strong>{lobby.description || displayMapName(lobby.mapName)}</strong><small>{displayMapName(lobby.mapName)} · Host {host}</small></span>
             <span className="lobby-count">{lobby.peers.length}/{lobby.maxPlayers || "—"}</span>
             {hostPeer?.ip && <span className="mono lobby-ip">{hostPeer.ip}</span>}
@@ -242,9 +280,12 @@ export function LobbyDetailPage() {
   const host = data.profiles.find((profile) => profile.id === lobby.hostProfileId)
   return (
     <Panel title={lobby.description || displayMapName(lobby.mapName)} eyebrow={`LOBBY #${lobby.id}`}>
+      <div className="lobby-map-feature">
+        <MapArtwork name={lobby.mapName} />
+        <div><p className="eyebrow">BATTLEFIELD</p><h3>{displayMapName(lobby.mapName)}</h3></div>
+      </div>
       <div className="detail-grid">
         <div><span>Host</span><strong><ProfileAnchor profile={{ id: lobby.hostProfileId }}>{host?.alias || `Player ${lobby.hostProfileId}`}</ProfileAnchor></strong></div>
-        <div><span>Map</span><strong>{displayMapName(lobby.mapName)}</strong></div>
         <div><span>Room type</span><strong>{lobby.matchTypeId === 26 ? "Ranked automatch" : "Custom room"}</strong></div>
         <div><span>Players</span><strong>{lobby.peers.length} / {lobby.maxPlayers || "—"}</strong></div>
         <div><span>Relay region</span><strong>{lobby.relayRegion || (lobby.isLan ? "LAN" : "—")}</strong></div>
@@ -255,7 +296,7 @@ export function LobbyDetailPage() {
       <h3 className="subheading">Players in this room</h3>
       <div className="table-wrap"><table><thead><tr><th>Player</th><th>Profile</th><th>IP address</th><th>Civilization</th><th>Team</th></tr></thead><tbody>
         {lobby.peers.map((peer) => (
-          <tr key={peer.profileId}><td><ProfileName profileId={peer.profileId} profiles={data.profiles} /></td><td className="mono">{peer.profileId}</td><td className="mono">{peer.ip || "Not provided"}</td><td>{civilizationName(peer.raceId)}</td><td>{peer.teamId || "—"}</td></tr>
+          <tr key={peer.profileId}><td><ProfileName profileId={peer.profileId} profiles={data.profiles} /></td><td className="mono">{peer.profileId}</td><td className="mono">{peer.ip || "Not provided"}</td><td><span className="civilization-cell"><CivilizationArtwork raceId={peer.raceId} />{civilizationName(peer.raceId)}</span></td><td>{peer.teamId || "—"}</td></tr>
         ))}
         {!lobby.peers.length && <tr><td colSpan={5} className="empty">The advertisement contains no player details.</td></tr>}
       </tbody></table></div>

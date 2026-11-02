@@ -120,7 +120,9 @@ export interface InventoryLocation {
   tracksMoves: number
 }
 
-const API_ROOT = "/community"
+const API_BASE_URL = (import.meta.env.VITE_AGE_SERVER_URL?.trim() || "https://127.0.0.1:443")
+  .replace(/\/+$/, "")
+const API_ROOT = `${API_BASE_URL}/community`
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
@@ -154,9 +156,17 @@ async function get(path: string, params: Record<string, string | number | number
   }
 
   const suffix = query.size > 0 ? `?${query.toString()}` : ""
-  const response = await fetch(`${API_ROOT}${path}${suffix}`, {
-    headers: { Accept: "application/json" },
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_ROOT}${path}${suffix}`, {
+      headers: { Accept: "application/json" },
+    })
+  } catch (error) {
+    const detail = error instanceof Error ? ` ${error.message}` : ""
+    throw new Error(
+      `Could not connect directly to ${API_BASE_URL}. Check that the server certificate is trusted by this browser and that the server allows CORS from this website's origin.${detail}`,
+    )
+  }
   const text = await response.text()
   if (!response.ok) {
     let message = text
@@ -486,6 +496,44 @@ export function civilizationName(raceId: number): string {
     "Dravidians", "Gurjaras", "Romans", "Armenians", "Georgians",
   ]
   return names[raceId] ?? (raceId < 0 ? "Unknown" : `Civilization ${raceId}`)
+}
+
+export function civilizationIconPath(raceId: number): string {
+  const name = civilizationName(raceId)
+  if (name === "Unknown" || name.startsWith("Civilization ")) {
+    return "/images/civs/unknown.svg"
+  }
+  const slug = name.toLowerCase().replace(/\s+/g, "-")
+  return `/images/civs/${slug}.png`
+}
+
+const availableMapImages = new Set([
+  "acclivity", "acropolis", "arabia", "arena", "atacama", "black-forest",
+  "enclosed", "fortress", "four-lakes", "frigid-lake", "ghost-lake",
+  "golden-pit", "golden-swamp", "hideout", "kawasan", "kilimanjaro",
+  "loch-ness", "lombardia", "migration", "morass", "nomad",
+  "northern-isles", "oasis", "pilgrims", "serengeti", "shoals", "valley",
+])
+
+const mapSlugAliases: Record<string, string> = {
+  blackforest: "black-forest",
+  fourlakes: "four-lakes",
+  ghostlake: "ghost-lake",
+  goldenpit: "golden-pit",
+  goldenswamp: "golden-swamp",
+  lochness: "loch-ness",
+  northernisles: "northern-isles",
+}
+
+export function mapIconPath(raw: string): string {
+  const normalized = raw
+    .trim()
+    .replace(/\.(rms2?|RMS2?)$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+  const alias = mapSlugAliases[normalized]
+  const slug = alias ?? displayMapName(raw).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+  return availableMapImages.has(slug) ? `/images/maps/${slug}.png` : "/images/map-placeholder.svg"
 }
 
 export function getErrorMessage(error: unknown): string {
